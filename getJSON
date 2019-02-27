@@ -1,0 +1,119 @@
+function getJSONtest() {
+  
+   var i = 0;
+   var url = "https://whattomine.com/calculators.json";   
+   var res = UrlFetchApp.fetch(url);
+   var content = res.getContentText();
+   var json = JSON.parse(content);
+   
+   var coins = json["coins"];
+   
+   var key,coin,coin_id,coin_tag,coin_status,coin_algo,block_time,j,algorithm,price,blockReward,name,block24h,block24h1,mined24h,price, volume24h; //predefined values-?helps for faster initialization?
+
+   var sheet = SpreadsheetApp.getActiveSheet();
+   sheet.appendRow(["Id","Name","Block Time","Algorithm", "Exchange Rate", "Block Reward", "Block 24h", "Coins Mined 24h","Price", "Mining Vol. 24h"]);//adds names to the "header"
+   
+   var tempArr = [];  
+   
+   for (key in coins)//searches for coin IDs in https://whattomine.com/calculators.json
+   {
+     coin = coins[key];
+     coin_id = coin["id"];
+     coin_tag = coin["tag"];
+     coin_status = coin["status"];
+     coin_algo = coin["algorithm"];
+     
+     if (coin_status === "Active") //choses only coin with "active" status and pushes it to an array
+     {
+
+        switch(coin_algo){//checks if the algo is already on NH
+         case 'SHA-256':
+         case 'Scrypt':
+         case 'ScryptNf':
+         case 'X11':
+         case 'X13':
+         case 'Keccak':
+         case 'X15':
+         case 'Nist5':
+         case 'NeoScrypt':
+         case 'Lyra2RE':
+         case 'WhirlpoolX':
+         case 'Qubit':
+         case 'Quark':
+         case 'Axiom':
+         case 'Lyra2REv2':
+         case 'ScryptJaneNf16':
+         case 'Blake256r8':
+         case 'Blake256r14':
+         case 'Blake256r8vnl':
+         case 'Hodl':
+         case 'Ethash':
+         case 'Decred':
+         case 'CryptoNight':
+         case 'Lbry':
+         case 'Equihash':
+         case 'Pascal':
+         case 'X11Gost':
+         case 'Sia':
+         case 'Blake2s':
+         case 'Skunk':
+         case 'CryptoNightV7':
+         case 'CryptoNightHeavy':
+         case 'Lyra2Z':
+         case 'X16R':
+         case 'CryptoNightV8':
+         case 'SHA256AsicBoost':
+         case 'Zhash':
+         case 'Equihash (150,5)':
+         case 'Cuckaroo29':
+         case 'Lyra2REv3':
+         case 'MTP':
+         case 'CuckooCycle':
+         
+         continue;
+     }
+            
+       tempArr.push(coin_id); 
+       
+     }  
+   }
+   
+   
+   
+   for (j=0; j<tempArr.length; j++)//loops through the active coins on https://whattomine.com/coins/1.json
+   {    
+     url = "https://whattomine.com/coins/"+tempArr[j]+".json";     
+     res = UrlFetchApp.fetch(url);
+     content = res.getContentText();
+     obj = JSON.parse(content);  
+     
+
+     name = obj.name;
+     block_time = obj.block_time;
+     algorithm = obj.algorithm;
+     price = obj.exchange_rate;
+     blockReward = obj.block_reward;
+     price = obj.exchange_rate;
+     
+     block24h = 86400 / obj.block_time;
+     mined24h = obj.block_reward * 86400 / obj.block_time;
+     volume24h = mined24h * price;
+     
+     sheet.appendRow([tempArr[j],name,block_time,algorithm,price,blockReward,block24h.toFixed(2),mined24h.toFixed(2),price,volume24h.toFixed(2)]);//add new row to the sheet
+      
+
+         
+     i++;
+     if (i==40)// will sleep if loop happens 40x(JSON limit issue)
+     {
+       Utilities.sleep(2000);      
+       i=0;
+     }   
+     
+   } 
+
+
+
+  
+  
+}
